@@ -1,3 +1,3 @@
 #!/usr/bin/env node
-const legally = require("./index.min.js");
+const legally = require("./src/index.js");
 legally.RunNow();
