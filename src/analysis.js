@@ -35,7 +35,9 @@ module.exports = function(licenses, opt){
       const [directName, directVersion] = entry;
       const found = nodeModulesData.find(row => {
         const [nameAndVersion] = row;
-        const [name, version] = nameAndVersion.split('@');
+        const divider = nameAndVersion.lastIndexOf('@');
+        const name = nameAndVersion.substr(0, divider);
+        const version = nameAndVersion.substr(divider + 1);
         return (name === directName && semver.satisfies(version, directVersion));
       });
       data.push(found || [`${directName}@${directVersion}`, `NOT FOUND`]);
@@ -49,7 +51,9 @@ module.exports = function(licenses, opt){
     if (opt.text) {
       data.forEach(row => {
         const [nameAndVersion, package_, license, readme] = row;
-        const [name, version] = nameAndVersion.split('@');
+        const divider = nameAndVersion.lastIndexOf('@');
+        const name = nameAndVersion.substr(0, divider);
+        const version = nameAndVersion.substr(divider + 1);
         const licenses = new Set([package_, license, readme]);
         licenses.delete('-');
         let text;
