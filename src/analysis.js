@@ -1,5 +1,8 @@
 const table = require('./table');
 const normal = require('./normalize');
+const fs = require("fs");
+const semver = require("semver");
+const options = require('./options');
 
 const filters = ({ filter, type }) => lic => {
   lic = normal(lic);
@@ -9,17 +12,38 @@ const filters = ({ filter, type }) => lic => {
   return filter.some(fil => lic.includes(fil)) || type.includes(lic);
 }
 
+const fileContents = fs.readFileSync("./package.json");
+const parentPackageJson = JSON.parse(fileContents);
+const directDependencies = Object.assign({}, parentPackageJson.dependencies, parentPackageJson.devDependencies);
+
 module.exports = function(licenses, opt){
   if (!Object.keys(licenses).length) {
     throw new Error('No modules found. Are you in the right directory?');
   }
 
   const display = item => item.filter(filters(opt)).join(' + ') || '-';
-  const data = Object.entries(licenses).map(([
+  const nodeModulesData = Object.entries(licenses).map(([
     name, { package: pack, copying, readme }
   ]) => [
     name, display(pack), display(copying), display(readme)
   ]);
+  let data;
+
+  if (opt.direct) {
+    data = [];
+    Object.entries(directDependencies).forEach(entry => {
+      const [directName, directVersion] = entry;
+      const found = nodeModulesData.find(row => {
+        const [nameAndVersion] = row;
+        const [name, version] = nameAndVersion.split('@');
+        return (name === directName && semver.satisfies(version, directVersion));
+      });
+      data.push(found || [`${directName}@${directVersion}`, `NOT FOUND`]);
+    });
+  }
+  else {
+    data = nodeModulesData;
+  }  
 
   if (opt.show.includes('packages')) {
     table(data, {
