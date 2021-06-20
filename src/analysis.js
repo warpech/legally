@@ -46,12 +46,30 @@ module.exports = function(licenses, opt){
   }  
 
   if (opt.show.includes('packages')) {
-    table(data, {
-      'Module name': parseInt(25 * opt.width / 80),
-      'package': parseInt(14 * opt.width / 80),
-      'License': parseInt(14 * opt.width / 80),
-      'README': parseInt(14 * opt.width / 80)
-    }, { title: 'Packages (' + data.length + ')', repeat: 50, ...opt });
+    if (opt.text) {
+      data.forEach(row => {
+        const [nameAndVersion, package_, license, readme] = row;
+        const [name, version] = nameAndVersion.split('@');
+        const licenses = new Set([package_, license, readme]);
+        licenses.delete('-');
+        let text;
+        if (licenses.size === 1) {
+          text = `${name}, v${version}, license: ${Array.from(licenses)[0]}`;
+        }
+        else {
+          text = `${name}, v${version}, license: [package.json ${package_}, license ${license}, readme ${readme}]`;
+        }
+        console.log(text);
+      });
+    }
+    else {
+      table(data, {
+        'Module name': parseInt(25 * opt.width / 80),
+        'package': parseInt(14 * opt.width / 80),
+        'License': parseInt(14 * opt.width / 80),
+        'README': parseInt(14 * opt.width / 80)
+      }, { title: 'Packages (' + data.length + ')', repeat: 50, ...opt });
+    }
   }
 
 
